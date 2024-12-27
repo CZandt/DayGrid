@@ -13,6 +13,7 @@ import { Session } from "@supabase/supabase-js";
 import { useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { useAppContext } from "../components/ContextProvider";
 import ReviewDay from "./ReviewDay";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type PlanRouteParams = {
   session: Session;
@@ -138,6 +139,20 @@ export default function Plan() {
 
       console.log("Data successfully saved!");
       setIsSubmitted(true); // Update the state to show the completed screen
+
+      const saveData = async () => {
+        try {
+          await AsyncStorage.setItem(
+            "@lastDate",
+            new Date().toLocaleDateString("en-US")
+          );
+          await AsyncStorage.setItem("@dayId", dayCollectionId);
+        } catch (e) {
+          console.error("FAILED LOCAL STORAGE SAVE", e);
+        }
+      };
+
+      await saveData();
     } catch (error) {
       console.error("Error saving data:", error);
     }

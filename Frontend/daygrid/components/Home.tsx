@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabase";
 import { DayCollection } from "../types/types";
 import { Session } from "@supabase/supabase-js";
 import { useAppContext } from "../components/ContextProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type HomeRouteParams = {
   Home: {
@@ -25,19 +26,24 @@ export default function Home() {
 
   //TODO: THIS IS A REALLY BAD WAY TO CHECK IF THE DAY HAS BEEN PLANNED
   const onLoadFunction = async () => {
-    let { data: DayCollection, error } = await supabase
-      .from("DayCollection")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .eq("date", new Date().toLocaleDateString("en-US"));
+    const localID = async () => {
+      try {
+        const lastUpdateDay = await AsyncStorage.getItem("@lastDate");
+        console.log("READ LAST UPDATE DAY: ", lastUpdateDay);
+        if (lastUpdateDay === new Date().toLocaleDateString("en-US")) {
+          const dayID = await AsyncStorage.getItem("@dayId");
+          setDayCollectionID(dayID!); // TODO: Fix the forceUNWRAP
+          console.log("SET DAY ID TO: ", dayID);
+          return true;
+        } else {
+          return false;
+        }
+      } catch (e) {
+        console.error("FAILED TO LOAD LOCAL DATA", e);
+      }
+    };
 
-    if (DayCollection?.length === 0) {
-      console.log("Returned False");
-      return false;
-    } else {
-      setDayCollectionID(DayCollection[0].id);
-      return true;
-    }
+    return await localID();
   };
 
   // Runs when the screen comes into focus
@@ -52,9 +58,11 @@ export default function Home() {
           console.log(plannedDay);
           setPlannedDay(true);
         }
+        console.log("FETCH DONE");
       };
 
       fetchDayStatus(); // Call the async function
+      console.log("AFTER FETCH LINE");
 
       // Cleanup function: runs when the screen loses focus
       return () => {
