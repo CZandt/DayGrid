@@ -72,11 +72,7 @@ export default function Home() {
   );
 
   if (loading) {
-    return (
-      <View>
-        <Text>LOADING...</Text>
-      </View>
-    );
+    return <View></View>;
   }
 
   return (

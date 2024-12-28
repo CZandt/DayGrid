@@ -84,13 +84,13 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
                 ["Looking Forward", "Thankful"].includes(quadrant.category)
               )
               .map((quadrant, index) => (
-                <View style={styles.gridItem}>
+                <View key={quadrant.id || index} style={styles.gridItem}>
                   <GenericQ quadrant={quadrant} />
                 </View>
               ))}
           </View>
 
-          {/*MAIN QUADRANTS */}
+          {/* MAIN QUADRANTS */}
           <View style={styles.grid}>
             {quadrants
               .filter((quadrant) =>
@@ -102,7 +102,7 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
                 ].includes(quadrant.category)
               )
               .map((quadrant, index) => (
-                <View key={index} style={styles.gridItem}>
+                <View key={quadrant.id || index} style={styles.gridItem}>
                   <GenericQ quadrant={quadrant} />
                 </View>
               ))}
@@ -111,7 +111,7 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
           {quadrants
             .filter((quadrant) => ["Other"].includes(quadrant.category))
             .map((quadrant, index) => (
-              <MindQ quadrant={quadrant} />
+              <MindQ key={quadrant.id || index} quadrant={quadrant} />
             ))}
 
           <TouchableOpacity onPress={() => navigation.navigate("Plan")}>
