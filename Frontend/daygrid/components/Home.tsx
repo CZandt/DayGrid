@@ -29,11 +29,9 @@ export default function Home() {
     const localID = async () => {
       try {
         const lastUpdateDay = await AsyncStorage.getItem("@lastDate");
-        console.log("READ LAST UPDATE DAY: ", lastUpdateDay);
         if (lastUpdateDay === new Date().toLocaleDateString("en-US")) {
           const dayID = await AsyncStorage.getItem("@dayId");
           setDayCollectionID(dayID!); // TODO: Fix the forceUNWRAP
-          console.log("SET DAY ID TO: ", dayID);
           return true;
         } else {
           return false;
@@ -58,11 +56,9 @@ export default function Home() {
           console.log(plannedDay);
           setPlannedDay(true);
         }
-        console.log("FETCH DONE");
       };
 
-      fetchDayStatus(); // Call the async function
-      console.log("AFTER FETCH LINE");
+      fetchDayStatus(); // Call the async function;
 
       // Cleanup function: runs when the screen loses focus
       return () => {

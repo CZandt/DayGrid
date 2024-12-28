@@ -12,6 +12,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Parent() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [refreshLoad, setRefreshLoad] = useState(false);
+  const [getSessionLoad, setGetSessionLoad] = useState(false);
   const {
     plannedDay,
     setPlannedDay,
@@ -23,14 +26,24 @@ export default function Parent() {
 
   useEffect(() => {
     setLoading(true);
+    setRefreshLoad(true);
+    setGetSessionLoad(true);
 
     let localSession: Session | null = null;
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       localSession = session;
+      await saveUserData();
       setSession(session);
+      setGetSessionLoad(false);
+      if (!refreshLoad) {
+        setLoading(false);
+      }
     });
 
     const saveUserData = async () => {
+      if (localSession === null && session != null) {
+        localSession = session;
+      }
       if (localSession !== null) {
         try {
           let { data: User, error: e } = await supabase
@@ -40,6 +53,7 @@ export default function Parent() {
 
           await AsyncStorage.setItem("@firstName", User[0].first_name);
           setUFirstName(User[0].first_name);
+          console.log("NAME", User[0].first_name);
           await AsyncStorage.setItem("@lastName", User[0].last_name);
           setULastName(User[0].last_name);
         } catch (e) {
@@ -50,25 +64,21 @@ export default function Parent() {
 
     const fetchDayStatus = async () => {
       let dayComplete = await onLoadFunction();
-      await saveUserData();
 
       if (dayComplete !== plannedDay) {
         console.log(plannedDay);
         setPlannedDay(true);
       }
       console.log("FETCH DONE");
-      setLoading(false);
     };
 
     const onLoadFunction = async () => {
       const localID = async () => {
         try {
           const lastUpdateDay = await AsyncStorage.getItem("@lastDate");
-          console.log("READ LAST UPDATE DAY: ", lastUpdateDay);
           if (lastUpdateDay === new Date().toLocaleDateString("en-US")) {
             const dayID = await AsyncStorage.getItem("@dayId");
             setDayCollectionID(dayID!); // TODO: Fix the forceUNWRAP
-            console.log("SET DAY ID TO: ", dayID);
             return true;
           } else {
             return false;
@@ -81,8 +91,9 @@ export default function Parent() {
       return await localID();
     };
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange(async (_event, session) => {
       localSession = session;
+      await saveUserData();
       setSession(session);
     });
 

@@ -38,7 +38,7 @@ export default function HomePrePlan({ session }: HomePrePlanProps) {
         >
           <Text style={styles.planText}>Start planning</Text>
           <Text style={styles.addIcon}>+</Text>
-          <Text style={styles.planSubText}>create today's plan</Text>
+          <Text style={styles.planSubText}>Create today's plan</Text>
         </TouchableOpacity>
       </View>
 
