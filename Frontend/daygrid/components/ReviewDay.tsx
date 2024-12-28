@@ -81,6 +81,17 @@ export default function ReviewDay() {
     }
   };
 
+  const handleLeft = () => {
+    let tempArray = reviewScores;
+    tempArray[reviewStep] = currentScore;
+    setReviewScores(tempArray);
+    if (reviewStep > 0) {
+      setCurrentScore(tempArray[reviewStep - 1]);
+      setReviewStep(reviewStep - 1);
+      return;
+    }
+  };
+
   const handleRight = async () => {
     let tempArray = reviewScores;
     tempArray[reviewStep] = currentScore;
@@ -154,10 +165,7 @@ export default function ReviewDay() {
         <View style={styles.buttonContainer}>
           <View style={styles.buttonWrapper}>
             {reviewStep != 0 && (
-              <Button
-                title="Prev Step"
-                onPress={() => setReviewStep(reviewStep - 1)}
-              />
+              <Button title="Prev Step" onPress={handleLeft} />
             )}
           </View>
           <View style={styles.buttonWrapper}>
