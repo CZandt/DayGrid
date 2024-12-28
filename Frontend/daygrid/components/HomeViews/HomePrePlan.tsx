@@ -10,6 +10,7 @@ import StatsQ from "./Quadrants/StatsQ";
 
 import { useNavigation } from "@react-navigation/native";
 import { Session } from "@supabase/supabase-js";
+import { useAppContext } from "../ContextProvider";
 
 interface HomePrePlanProps {
   session: Session;
@@ -17,11 +18,12 @@ interface HomePrePlanProps {
 
 export default function HomePrePlan({ session }: HomePrePlanProps) {
   const navigation = useNavigation();
+  const { uFirstName, uLastName } = useAppContext();
   return (
     <View style={styles.container}>
       {/* Welcome Section */}
       <View style={styles.welcomeBox}>
-        <Text style={styles.welcomeText}>Welcome back {session.user.id}!</Text>
+        <Text style={styles.welcomeText}>Welcome back {uFirstName}!</Text>
         <Text style={styles.subText}>Make today the best possible!</Text>
       </View>
 

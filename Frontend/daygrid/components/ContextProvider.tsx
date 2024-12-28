@@ -12,6 +12,12 @@ interface AppContextProps {
 
   reviewScoresG: number[];
   setReviewScoresG: React.Dispatch<React.SetStateAction<number[]>>;
+
+  uFirstName: string;
+  setUFirstName: React.Dispatch<React.SetStateAction<string>>;
+
+  uLastName: string;
+  setULastName: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -25,6 +31,8 @@ export const ContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [reviewScoresG, setReviewScoresG] = useState<number[]>([
     0, 0, 0, 0, 0, 0, 0,
   ]);
+  const [uFirstName, setUFirstName] = useState("");
+  const [uLastName, setULastName] = useState("");
 
   return (
     <AppContext.Provider
@@ -37,6 +45,10 @@ export const ContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setReviewedDayG,
         reviewScoresG,
         setReviewScoresG,
+        uFirstName,
+        setUFirstName,
+        setULastName,
+        uLastName,
       }}
     >
       {children}

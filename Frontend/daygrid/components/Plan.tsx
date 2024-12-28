@@ -150,6 +150,8 @@ export default function Plan() {
         } catch (e) {
           console.error("FAILED LOCAL STORAGE SAVE", e);
         }
+
+        setPlannedDay(true);
       };
 
       await saveData();
