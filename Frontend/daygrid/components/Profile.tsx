@@ -36,9 +36,7 @@ export default function Profile() {
             {uFirstName} {uLastName}
           </Text>
           <Text style={styles.emailText}>Email: {session.user.email}</Text>
-          <Text style={styles.emailText}>
-            DayGrid user since: {formattedDate}
-          </Text>
+          <Text style={styles.emailText}>User since: {formattedDate}</Text>
         </View>
       </View>
 
