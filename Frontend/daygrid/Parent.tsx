@@ -95,6 +95,7 @@ export default function Parent() {
       localSession = session;
       await saveUserData();
       setSession(session);
+      setLoading(false);
     });
 
     fetchDayStatus(); // Call the async function
