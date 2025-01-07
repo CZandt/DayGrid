@@ -9,34 +9,37 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { Quadrant, Task } from "../../../types/types";
+import { Checkbox } from "react-native-paper";
 
 interface GenericQProps {
   quadrant: Quadrant;
+  onUpdateTask: (taskId: string, completed: boolean) => void;
 }
 
-export default function GenericQ({ quadrant }: GenericQProps) {
-  // State to control modal visibility
+export default function GenericQ({ quadrant, onUpdateTask }: GenericQProps) {
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Determine background color based on category
+  const handleTaskCompletion = (taskId: string, currentStatus: boolean) => {
+    onUpdateTask(taskId, !currentStatus);
+  };
+
   const getBackgroundColor = (category: string): string => {
     switch (category) {
       case "Relationships":
-        return "#F7BFAE"; // Light Red
+        return "#F7BFAE";
       case "Physical":
-        return "#E2FAED"; // Light Green
+        return "#E2FAED";
       case "Work":
-        return "#E9F8FC"; // Light Blue
+        return "#E9F8FC";
       case "Emotional/Spiritual":
         return "#F3D3A6";
       default:
-        return "#FFEEE2"; // Default color
+        return "#FFEEE2";
     }
   };
 
   return (
     <View>
-      {/* Touchable Quadrant */}
       <TouchableOpacity onPress={() => setModalVisible(true)}>
         <View
           style={[
@@ -46,8 +49,8 @@ export default function GenericQ({ quadrant }: GenericQProps) {
         >
           <Text style={styles.QuadrantTitle}>{quadrant.category}</Text>
           <FlatList
-            data={quadrant.Task}
-            keyExtractor={(task, index) => `${task.name}-${index}`}
+            data={quadrant.Task.filter((task) => !task.completed)} // Filter non-completed tasks
+            keyExtractor={(task, index) => `${task.name}-${index}`} // Ensure a unique key for each item
             renderItem={({ item }) => (
               <View style={styles.listItem}>
                 <View style={styles.bullet} />
@@ -58,7 +61,6 @@ export default function GenericQ({ quadrant }: GenericQProps) {
         </View>
       </TouchableOpacity>
 
-      {/* Modal for Expanded View */}
       <Modal
         visible={modalVisible}
         animationType="fade"
@@ -74,7 +76,23 @@ export default function GenericQ({ quadrant }: GenericQProps) {
                   data={quadrant.Task}
                   keyExtractor={(task, index) => `${task.name}-${index}`}
                   renderItem={({ item }) => (
-                    <Text style={styles.modalTask}>{item.name}</Text>
+                    <View style={styles.modalTaskContainer}>
+                      <Checkbox
+                        status={item.completed ? "checked" : "unchecked"}
+                        onPress={() =>
+                          handleTaskCompletion(item.id, item.completed)
+                        }
+                        color="#007AFF"
+                      />
+                      <Text
+                        style={[
+                          styles.modalTask,
+                          item.completed && styles.completedTask,
+                        ]}
+                      >
+                        {item.name}
+                      </Text>
+                    </View>
                   )}
                 />
               </View>
@@ -100,15 +118,15 @@ const styles = StyleSheet.create({
     color: "black",
   },
   listItem: {
-    flexDirection: "row", // Align bullet and text horizontally
+    flexDirection: "row",
     alignItems: "center",
     marginVertical: 4,
   },
   bullet: {
-    width: 8, // Size of the square bullet
+    width: 8,
     height: 8,
-    backgroundColor: "#333", // Color of the bullet
-    marginRight: 8, // Space between bullet and text
+    backgroundColor: "#333",
+    marginRight: 8,
   },
   taskItem: {
     fontSize: 14,
@@ -118,23 +136,35 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.4)", // Semi-transparent background
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   modalContent: {
     width: "90%",
     padding: 16,
     backgroundColor: "#FFF",
     borderRadius: 12,
-    alignItems: "center",
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 16,
+    textAlign: "center",
+  },
+  modalTaskContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
   modalTask: {
-    fontSize: 18,
-    marginBottom: 8,
+    fontSize: 16,
+    marginLeft: 8,
+    flex: 1,
     color: "#333",
+  },
+  completedTask: {
+    textDecorationLine: "line-through",
+    color: "#888",
   },
 });

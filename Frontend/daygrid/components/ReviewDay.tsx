@@ -144,7 +144,6 @@ export default function ReviewDay() {
   if (reviewStarted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>DAYC ID: {dayCollectionID}</Text>
         <Text style={styles.text}>{prompts[reviewStep]}</Text>
 
         <View style={styles.sliderContainer}>

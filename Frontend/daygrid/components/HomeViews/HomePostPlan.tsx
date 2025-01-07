@@ -17,7 +17,7 @@ import { Quadrant } from "../../types/types";
 import { TouchableOpacityBase } from "react-native";
 
 interface HomePostPlanProps {
-  session: Session; // Define session as a prop
+  session: Session;
 }
 
 export default function HomePostPlan({ session }: HomePostPlanProps) {
@@ -26,19 +26,48 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
   const { plannedDay, setPlannedDay, dayCollectionID, setDayCollectionID } =
     useAppContext();
 
-  // State to hold the fetched data
   const [quadrants, setQuadrants] = useState(null);
-
-  // State to track loading status
   const [loading, setLoading] = useState(true);
-
-  // State to track errors
   const [error, setError] = useState(null);
 
-  // Function to fetch data
+  const handleUpdateTask = async (taskId: string, completed: boolean) => {
+    try {
+      // Update local state
+      setQuadrants((prevQuadrants) =>
+        prevQuadrants.map((quadrant) => ({
+          ...quadrant,
+          Task: quadrant.Task.map((task) =>
+            task.id === taskId ? { ...task, completed } : task
+          ),
+        }))
+      );
+
+      // Update query
+      const { data: data2, error: error2 } = await supabase
+        .from("Task")
+        .update({ completed: completed })
+        .eq("id", taskId)
+        .select();
+
+      if (error2) {
+        console.error("Update failed:", error2.message);
+      } else {
+        console.log("Update success:", data2);
+      }
+
+      if (error2) {
+        console.error("Error updating task:", error2);
+        fetchPlanData();
+      }
+    } catch (err) {
+      console.error("Error in handleUpdateTask:", err);
+      fetchPlanData();
+    }
+  };
+
   const fetchPlanData = async () => {
     try {
-      setLoading(true); // Start loading
+      setLoading(true);
 
       let newQuadrantArray: Quadrant[] | null = [];
 
@@ -56,24 +85,20 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
       console.error("Error fetching plan data:", err);
       setError("Failed to fetch data. Please try again.");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
-  // Call fetchPlanData when the component mounts
   useEffect(() => {
     fetchPlanData();
   }, []);
 
   return (
     <View style={styles.container}>
-      {/* Loading State */}
       {loading && <ActivityIndicator size="large" color="#00AFFF" />}
 
-      {/* Error State */}
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      {/* Display Data */}
       {!loading && !error && quadrants && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Today's Plan</Text>
@@ -85,12 +110,14 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
               )
               .map((quadrant, index) => (
                 <View key={quadrant.id || index} style={styles.gridItem}>
-                  <GenericQ quadrant={quadrant} />
+                  <GenericQ
+                    quadrant={quadrant}
+                    onUpdateTask={handleUpdateTask}
+                  />
                 </View>
               ))}
           </View>
 
-          {/* MAIN QUADRANTS */}
           <View style={styles.grid}>
             {quadrants
               .filter((quadrant) =>
@@ -103,7 +130,10 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
               )
               .map((quadrant, index) => (
                 <View key={quadrant.id || index} style={styles.gridItem}>
-                  <GenericQ quadrant={quadrant} />
+                  <GenericQ
+                    quadrant={quadrant}
+                    onUpdateTask={handleUpdateTask}
+                  />
                 </View>
               ))}
           </View>
@@ -172,13 +202,13 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between", // Ensures space between columns
-    marginHorizontal: -8, // Align items with consistent spacing
+    justifyContent: "space-between",
+    marginHorizontal: -8,
   },
   gridItem: {
-    width: "48%", // Adjust width for 2 columns with some spacing
-    marginBottom: 16, // Space between rows
-    marginHorizontal: 0, // Spacing on the sides
+    width: "48%",
+    marginBottom: 16,
+    marginHorizontal: 0,
   },
   FinishDayButton: {
     width: "70%",

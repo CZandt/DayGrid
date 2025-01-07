@@ -35,9 +35,7 @@ export default function Parent() {
       await saveUserData();
       setSession(session);
       setGetSessionLoad(false);
-      if (!refreshLoad) {
-        setLoading(false);
-      }
+      setLoading(false);
     });
 
     const saveUserData = async () => {

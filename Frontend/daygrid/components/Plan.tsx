@@ -6,6 +6,7 @@ import {
   Button,
   TextInput,
   FlatList,
+  TouchableOpacity,
 } from "react-native";
 import { supabase } from "../lib/supabase"; // Import your Supabase client
 import { Quadrant, Task } from "./types"; // Assuming these interfaces are imported.
@@ -14,6 +15,7 @@ import { useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { useAppContext } from "../components/ContextProvider";
 import ReviewDay from "./ReviewDay";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 type PlanRouteParams = {
   session: Session;
@@ -27,17 +29,26 @@ export default function Plan() {
   const [isSubmitted, setIsSubmitted] = React.useState(false); // Add state for submission
 
   const { plannedDay, setPlannedDay } = useAppContext();
+  const navigation = useNavigation();
 
   const route = useRoute<RouteProp<{ Plan: PlanRouteParams }, "Plan">>();
   const { session } = route.params;
+  function getFormattedDate(date) {
+    const options = { month: "long", day: "numeric" };
+    return new Intl.DateTimeFormat("en-US", options).format(date);
+  }
+
+  // Usage example:
+  const today = new Date();
+  const formattedDate = getFormattedDate(today);
 
   const prompts = [
     "What are you looking forward to today?",
     "What are you thankful for today?",
-    "Work (What are you getting done today)?",
-    "Relationships (How are you focusing on your relationships today)?",
-    "Physical (How are you helping your body today)?",
-    "Emotional/Spiritual (How are you helping your soul today)?",
+    "What are you getting done today?",
+    "How are you focusing on your relationships today?",
+    "How are you helping your body today?",
+    "How are you helping your soul today?",
     "Other things on my mind?",
   ];
 
@@ -195,45 +206,74 @@ export default function Plan() {
 
   return (
     <View style={styles.container}>
-      <Button title="RESET DEBUG" onPress={handleReset} />
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("Home")}
+      >
+        <Text style={styles.backButtonText}>‹</Text>
+      </TouchableOpacity>
 
-      <Text style={styles.text}>{prompts[planningStep]}</Text>
-
-      <FlatList
-        data={currentTasks}
-        renderItem={({ item }) => <Text style={styles.taskItem}>• {item}</Text>}
-        keyExtractor={(item, index) => `${index}-${planningStep}`}
-        style={styles.taskList}
-      />
-
-      <TextInput
-        style={styles.input}
-        value={currentTask}
-        onChangeText={setCurrentTask}
-        placeholder="Add a task"
-      />
-      <Button title="Add Task" onPress={handleTaskAdd} />
-
-      <View style={styles.buttonContainer}>
-        <View style={styles.buttonWrapper}>
-          {planningStep != 0 && (
-            <Button
-              title="Prev Step"
-              onPress={() => setPlanningStep(planningStep - 1)}
-            />
-          )}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.title}>Today's Plan</Text>
+          <Text style={styles.date}>{formattedDate}</Text>
         </View>
-        <View style={styles.buttonWrapper}>
-          <Button
-            title={planningStep === prompts.length - 1 ? "Finish" : "Next Step"}
-            onPress={handleRight}
-          />
+        <View style={styles.progressContainer}>
+          <View style={styles.progressCircle}>
+            <Text style={styles.progressText}>
+              {planningStep + 1}/{prompts.length}
+            </Text>
+            <View style={styles.progressArc} />
+          </View>
         </View>
       </View>
 
-      <Text style={styles.stepCounter}>
-        Step {planningStep + 1} of {prompts.length}
-      </Text>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>{categories[planningStep]}</Text>
+        <Text style={styles.cardSubtitle}>{prompts[planningStep]}</Text>
+
+        <FlatList
+          data={currentTasks}
+          renderItem={({ item }) => (
+            <Text style={styles.taskItem}>□ {item}</Text>
+          )}
+          keyExtractor={(item, index) => `${index}-${planningStep}`}
+          style={styles.taskList}
+        />
+
+        <TextInput
+          style={styles.input}
+          value={currentTask}
+          onChangeText={setCurrentTask}
+          placeholder="⊕ Add another item..."
+          placeholderTextColor="#666"
+          onSubmitEditing={handleTaskAdd} // Add task on Enter key
+          blurOnSubmit={false} // Keeps the TextInput focused after pressing Enter
+        />
+
+        {/* <TouchableOpacity
+          style={styles.addTaskButton} // Styling for the Add Task button
+          onPress={handleTaskAdd}
+        >
+          <Text style={styles.addTaskButtonText}>Add Task</Text>
+        </TouchableOpacity> */}
+      </View>
+
+      <View style={styles.navigationButtons}>
+        {planningStep !== 0 && (
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setPlanningStep(planningStep - 1)}
+          >
+            <Text style={styles.navButtonText}>Previous</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.navButton} onPress={handleRight}>
+          <Text style={styles.navButtonText}>
+            {planningStep === prompts.length - 1 ? "Finish" : "Next"}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -241,54 +281,127 @@ export default function Plan() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#fff",
     padding: 20,
   },
-  text: {
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+  },
+  backButtonText: {
+    fontSize: 32,
+    color: "#000",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginTop: 80,
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  date: {
     fontSize: 18,
+    color: "#333",
+  },
+  progressContainer: {
+    position: "relative",
+  },
+  progressCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#e0e0e0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  progressArc: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    width: 30,
+    height: 15,
+    borderTopRightRadius: 15,
+    backgroundColor: "#4CAF50",
+  },
+  progressText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  card: {
+    backgroundColor: "#f0f8ff",
+    borderRadius: 15,
+    padding: 20,
+    marginVertical: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardTitle: {
+    fontSize: 24,
+    fontWeight: "500",
+    marginBottom: 10,
+  },
+  cardSubtitle: {
+    fontSize: 16,
+    color: "#666",
     marginBottom: 20,
     textAlign: "center",
   },
   taskList: {
-    width: "100%",
-    marginBottom: 20,
-    maxHeight: 150, // Limit the height of the task list
+    maxHeight: 200,
   },
   taskItem: {
     fontSize: 16,
-    marginVertical: 5,
+    marginVertical: 8,
+    color: "#333",
   },
   input: {
-    width: "100%",
-    height: 40, // Smaller input height
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
-    backgroundColor: "#fff",
+    fontSize: 16,
+    color: "#666",
+    padding: 0,
   },
-  buttonContainer: {
+  addButton: {
+    marginTop: 10,
+  },
+  navigationButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "80%",
-    marginBottom: 20,
+    marginTop: 20,
   },
-  buttonWrapper: {
-    flex: 1, // Ensures buttons take up equal space
-    marginHorizontal: 5, // Adds spacing between buttons
+  navButton: {
+    backgroundColor: "#000",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    minWidth: 120,
   },
-  stepCounter: {
-    fontSize: 14,
-    color: "#888",
-  },
-  completedText: {
-    fontSize: 24,
-    fontWeight: "bold",
+  navButtonText: {
+    color: "#fff",
     textAlign: "center",
-    marginBottom: 20,
-    color: "#4CAF50",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  addTaskButton: {
+    marginTop: 10,
+    backgroundColor: "#4CAF50", // Green color
+    borderRadius: 10,
+    padding: 10,
+    alignItems: "center",
+  },
+  addTaskButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
