@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   View,
@@ -8,7 +9,7 @@ import {
 } from "react-native";
 import StatsQ from "./Quadrants/StatsQ";
 
-import { useNavigation } from "@react-navigation/native";
+
 import { Session } from "@supabase/supabase-js";
 import { useAppContext } from "../ContextProvider";
 
@@ -16,8 +17,14 @@ interface HomePrePlanProps {
   session: Session;
 }
 
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { AppStackParamList } from "../../types/types"; // ✅ Ensure correct import path
+
+type HomePrePlanNavigationProp = StackNavigationProp<AppStackParamList, "Home">;
+
 export default function HomePrePlan({ session }: HomePrePlanProps) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<HomePrePlanNavigationProp>();
   const { uFirstName, uLastName } = useAppContext();
   return (
     <View style={styles.container}>
