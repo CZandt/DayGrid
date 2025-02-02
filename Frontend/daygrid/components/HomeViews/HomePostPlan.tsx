@@ -90,8 +90,27 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
       console.error("Error fetching plan data:", err);
       setError("Failed to fetch data. Please try again.");
     } finally {
+      console.log("SET LOAD FALSE");
       setLoading(false);
     }
+    console.log("Set load false out of try");
+
+    setLoading(false);
+
+    // Run a query to grab all the valid days that user has entered so we can adjust the calendar to only allow selection of valid days. + bound the calendar
+  };
+
+  const fetchPreviousPlanData = async () => {
+    if (offHandQuadrants === null) {
+      setOffHandQuadrants(quadrants); //Saves the current day quadrants
+    }
+
+    let newQuadrantArray: Quadrant[] | null = [];
+
+    const { data: prevQuad, error: qError } = await supabase
+      .from("Quadrant")
+      .select("*, Tast(*)");
+    //Add a modifier to use the currently selected day
   };
 
   useEffect(() => {
