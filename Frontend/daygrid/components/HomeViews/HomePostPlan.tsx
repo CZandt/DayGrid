@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  Modal,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { supabase } from "../../lib/supabase";
@@ -14,7 +15,7 @@ import TopQ from "./Quadrants/TopQ";
 import MindQ from "./Quadrants/MindQ";
 import { useAppContext } from "../../components/ContextProvider";
 import { Quadrant } from "../../types/types";
-import { TouchableOpacityBase } from "react-native";
+import { Calendar } from "react-native-calendars";
 
 interface HomePostPlanProps {
   session: Session;
@@ -29,6 +30,10 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
   const [quadrants, setQuadrants] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const [offHandQuadrants, setOffHandQuadrants] = useState(null);
 
   const handleUpdateTask = async (taskId: string, completed: boolean) => {
     try {
@@ -90,6 +95,7 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
   };
 
   useEffect(() => {
+    console.log("Fetching plan data");
     fetchPlanData();
   }, []);
 
@@ -101,7 +107,15 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
 
       {!loading && !error && quadrants && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Today's Plan</Text>
+          <View style={styles.headerContainer}>
+            <Text style={styles.sectionTitle}>Today's Plan</Text>
+            <TouchableOpacity
+              onPress={() => setShowCalendar(true)}
+              style={styles.calendarButton}
+            >
+              <Text style={styles.calendarButtonText}>📅</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.grid}>
             {quadrants
@@ -151,6 +165,38 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
           </TouchableOpacity>
         </View>
       )}
+
+      <Modal
+        visible={showCalendar}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCalendar(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.calendarWrapper}>
+            <Calendar
+              current={new Date().toISOString()}
+              minDate="2023-01-01"
+              maxDate="2025-12-31"
+              onDayPress={(day) => {
+                console.log("Selected day:", day.dateString);
+                setSelectedDate(day.dateString);
+                setShowCalendar(false);
+              }}
+              theme={{
+                backgroundColor: "#ffffff",
+                calendarBackground: "#ffffff",
+                textSectionTitleColor: "#b6c1cd",
+                selectedDayBackgroundColor: "#00adf5",
+                selectedDayTextColor: "#ffffff",
+                todayTextColor: "#00adf5",
+                dayTextColor: "#2d4150",
+                textDisabledColor: "#d9e1e8",
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -164,11 +210,36 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 16,
   },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 40,
     fontWeight: "bold",
     color: "black",
     marginBottom: 8,
+  },
+  calendarButton: {
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#E2E8FF",
+  },
+  calendarButtonText: {
+    fontSize: 24,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  calendarWrapper: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    marginHorizontal: 20,
+    padding: 16,
   },
   quadrantBox: {
     backgroundColor: "#F9F9F9",
