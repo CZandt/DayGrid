@@ -102,9 +102,7 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
   return (
     <View style={styles.container}>
       {loading && <ActivityIndicator size="large" color="#00AFFF" />}
-
       {error && <Text style={styles.errorText}>{error}</Text>}
-
       {!loading && !error && quadrants && (
         <View style={styles.section}>
           <View style={styles.headerContainer}>
@@ -165,15 +163,22 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
           </TouchableOpacity>
         </View>
       )}
-
       <Modal
         visible={showCalendar}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setShowCalendar(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.calendarWrapper}>
+        <TouchableOpacity
+          style={styles.modalContainer}
+          activeOpacity={1}
+          onPress={() => setShowCalendar(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={styles.calendarWrapper}
+          >
             <Calendar
               current={new Date().toISOString()}
               minDate="2023-01-01"
@@ -194,8 +199,8 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
                 textDisabledColor: "#d9e1e8",
               }}
             />
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -241,6 +246,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     padding: 16,
   },
+
   quadrantBox: {
     backgroundColor: "#F9F9F9",
     borderRadius: 12,
