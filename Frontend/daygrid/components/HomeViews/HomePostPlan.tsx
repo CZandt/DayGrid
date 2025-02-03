@@ -31,13 +31,42 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toLocaleDateString("en-US")
+  );
 
+  const [validDates, setValidDates] = useState([]);
   const [offHandQuadrants, setOffHandQuadrants] = useState(null);
+
+  const markedDates = validDates.reduce(
+    (obj, date) => ({
+      ...obj,
+      [date]: {
+        selected: true,
+        selectedColor: "#00adf5",
+        disableTouchEvent: false,
+      },
+    }),
+    {}
+  );
+
+  const minDate =
+    validDates.length > 0
+      ? validDates.reduce(
+          (min, date) => (date < min ? date : min),
+          validDates[0]
+        )
+      : "2023-01-01";
+  const maxDate =
+    validDates.length > 0
+      ? validDates.reduce(
+          (max, date) => (date > max ? date : max),
+          validDates[0]
+        )
+      : "2025-12-31";
 
   const handleUpdateTask = async (taskId: string, completed: boolean) => {
     try {
-      // Update local state
       setQuadrants((prevQuadrants) =>
         prevQuadrants.map((quadrant) => ({
           ...quadrant,
@@ -47,7 +76,6 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
         }))
       );
 
-      // Update query
       const { data: data2, error: error2 } = await supabase
         .from("Task")
         .update({ completed: completed })
@@ -73,6 +101,17 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
   const fetchPlanData = async () => {
     try {
       setLoading(true);
+      const { data: validDays, error: dayError } = await supabase
+        .from("DayCollection")
+        .select("date")
+        .eq("user_id", session.user.id);
+
+      let tempDates = [];
+      validDays?.forEach((dateObject) => {
+        tempDates.push(dateObject.date);
+      });
+
+      setValidDates(tempDates);
 
       let newQuadrantArray: Quadrant[] | null = [];
 
@@ -94,23 +133,24 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
       setLoading(false);
     }
     console.log("Set load false out of try");
-
     setLoading(false);
-
-    // Run a query to grab all the valid days that user has entered so we can adjust the calendar to only allow selection of valid days. + bound the calendar
   };
 
-  const fetchPreviousPlanData = async () => {
+  const fetchPreviousPlanData = async (selectedDate: string) => {
     if (offHandQuadrants === null) {
-      setOffHandQuadrants(quadrants); //Saves the current day quadrants
+      setOffHandQuadrants(quadrants);
     }
 
     let newQuadrantArray: Quadrant[] | null = [];
 
     const { data: prevQuad, error: qError } = await supabase
       .from("Quadrant")
-      .select("*, Tast(*)");
-    //Add a modifier to use the currently selected day
+      .select("*, Task(*), DayCollection!inner(user_id)")
+      .eq("date", selectedDate)
+      .eq("DayCollection.user_id", session.user.id);
+
+    console.log("PAST DAY DATA: ", prevQuad);
+    setQuadrants(prevQuad);
   };
 
   useEffect(() => {
@@ -125,7 +165,7 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
       {!loading && !error && quadrants && (
         <View style={styles.section}>
           <View style={styles.headerContainer}>
-            <Text style={styles.sectionTitle}>Today's Plan</Text>
+            <Text style={styles.sectionTitle}>{selectedDate} Plan</Text>
             <TouchableOpacity
               onPress={() => setShowCalendar(true)}
               style={styles.calendarButton}
@@ -200,12 +240,17 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
           >
             <Calendar
               current={new Date().toISOString()}
-              minDate="2023-01-01"
-              maxDate="2025-12-31"
+              minDate={minDate}
+              maxDate={maxDate}
+              markedDates={markedDates}
               onDayPress={(day) => {
-                console.log("Selected day:", day.dateString);
-                setSelectedDate(day.dateString);
-                setShowCalendar(false);
+                if (validDates.includes(day.dateString)) {
+                  console.log("Selected day:", day.dateString);
+                  console.log(new Date().toISOString());
+                  fetchPreviousPlanData(day.dateString);
+                  setSelectedDate(day.dateString);
+                  setShowCalendar(false);
+                }
               }}
               theme={{
                 backgroundColor: "#ffffff",
@@ -217,6 +262,7 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
                 dayTextColor: "#2d4150",
                 textDisabledColor: "#d9e1e8",
               }}
+              disableAllTouchEventsForDisabledDays={true}
             />
           </TouchableOpacity>
         </TouchableOpacity>
@@ -265,7 +311,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     padding: 16,
   },
-
   quadrantBox: {
     backgroundColor: "#F9F9F9",
     borderRadius: 12,
