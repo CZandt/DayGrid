@@ -11,13 +11,15 @@ const onboardingSteps = [
   },
   {
     id: 2,
-    image: { uri: "https://ibb.co/nMt8r9SZ" },
+    //image: { uri: "https://ibb.co/nMt8r9SZ" },
+    image: require("../assets/onboarding2.png"),
     subtitle: "Be More Mindful",
     text: "DayGrid is built to help you live in the moment, write down things on your mind and enjoy your day.",
   },
   {
     id: 3,
-    image: { uri: "https://ibb.co/bj8K8XXx" },
+    //image: { uri: "https://ibb.co/bj8K8XXx" },
+    image: require("../assets/onboarding3.png"),
     subtitle: "Boost Productivity",
     text: "By planning a day at a time, you will be able to accomplish goals, plans, and become more productive over time.",
   },
