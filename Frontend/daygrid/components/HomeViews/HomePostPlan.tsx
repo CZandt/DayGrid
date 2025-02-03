@@ -19,36 +19,52 @@ import { Calendar } from "react-native-calendars";
 
 interface HomePostPlanProps {
   session: Session;
+  quadrants: Quadrant[] | null;
+  setQuadrants: React.Dispatch<React.SetStateAction<Quadrant[] | null>>;
+  offHandQuadrants: Quadrant[] | null;
+  setOffHandQuadrants: React.Dispatch<React.SetStateAction<Quadrant[] | null>>;
+  selectedDate: String;
+  setSelectedDate: React.Dispatch<React.SetStateAction<String>>;
 }
 
-export default function HomePostPlan({ session }: HomePostPlanProps) {
+export default function HomePostPlan({
+  session,
+  quadrants,
+  setQuadrants,
+  offHandQuadrants,
+  setOffHandQuadrants,
+  selectedDate,
+  setSelectedDate,
+}: HomePostPlanProps) {
   const navigation = useNavigation();
 
   const { plannedDay, setPlannedDay, dayCollectionID, setDayCollectionID } =
     useAppContext();
 
-  const [quadrants, setQuadrants] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toLocaleDateString("en-US")
-  );
 
   const [validDates, setValidDates] = useState([]);
-  const [offHandQuadrants, setOffHandQuadrants] = useState(null);
 
-  const markedDates = validDates.reduce(
-    (obj, date) => ({
-      ...obj,
-      [date]: {
-        selected: true,
-        selectedColor: "#00adf5",
-        disableTouchEvent: false,
-      },
-    }),
-    {}
-  );
+  const markedDates = {
+    ...validDates.reduce(
+      (obj, date) => ({
+        ...obj,
+        [date]: {
+          marked: true,
+          dotColor: "#00adf5",
+          disableTouchEvent: false,
+        },
+      }),
+      {}
+    ),
+    [selectedDate]: {
+      selected: true,
+      selectedColor: "#00adf5",
+      disableTouchEvent: false,
+    },
+  };
 
   const minDate =
     validDates.length > 0
@@ -165,7 +181,12 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
       {!loading && !error && quadrants && (
         <View style={styles.section}>
           <View style={styles.headerContainer}>
-            <Text style={styles.sectionTitle}>{selectedDate} Plan</Text>
+            <Text style={styles.sectionTitle}>
+              {selectedDate === new Date().toLocaleDateString("en-US")
+                ? "Today's Plan"
+                : `${selectedDate} Plan`}
+            </Text>
+
             <TouchableOpacity
               onPress={() => setShowCalendar(true)}
               style={styles.calendarButton}
@@ -245,8 +266,6 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
               markedDates={markedDates}
               onDayPress={(day) => {
                 if (validDates.includes(day.dateString)) {
-                  console.log("Selected day:", day.dateString);
-                  console.log(new Date().toISOString());
                   fetchPreviousPlanData(day.dateString);
                   setSelectedDate(day.dateString);
                   setShowCalendar(false);
@@ -261,6 +280,8 @@ export default function HomePostPlan({ session }: HomePostPlanProps) {
                 todayTextColor: "#00adf5",
                 dayTextColor: "#2d4150",
                 textDisabledColor: "#d9e1e8",
+                disabledDayTextColor: "#d9e1e8", // Color for disabled days
+                dotColor: "#00adf5", // Color for dots under marked dates
               }}
               disableAllTouchEventsForDisabledDays={true}
             />

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import HomePrePlan from "./HomeViews/HomePrePlan";
 import HomePostPlan from "./HomeViews/HomePostPlan";
 import { View, StyleSheet, Text } from "react-native";
@@ -23,6 +23,12 @@ export default function Home() {
     useAppContext();
 
   const [loading, setLoading] = React.useState(true);
+
+  const [quadrants, setQuadrants] = useState(null);
+  const [offHandQuadrants, setOffHandQuadrants] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toLocaleDateString("en-US")
+  );
 
   //TODO: THIS IS A REALLY BAD WAY TO CHECK IF THE DAY HAS BEEN PLANNED
   const onLoadFunction = async () => {
@@ -63,6 +69,13 @@ export default function Home() {
       // Cleanup function: runs when the screen loses focus
       return () => {
         console.log("Leaving Home Screen");
+        console.log(offHandQuadrants);
+
+        if (offHandQuadrants != null) {
+          setQuadrants(offHandQuadrants);
+          setOffHandQuadrants(null);
+          setSelectedDate(new Date().toLocaleDateString("en-US"));
+        }
       };
     }, [plannedDay])
   );
@@ -74,7 +87,15 @@ export default function Home() {
   return (
     <View style={styles.container}>
       {plannedDay ? (
-        <HomePostPlan session={session} />
+        <HomePostPlan
+          session={session}
+          quadrants={quadrants}
+          setQuadrants={setQuadrants}
+          offHandQuadrants={offHandQuadrants}
+          setOffHandQuadrants={setOffHandQuadrants}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+        />
       ) : (
         <HomePrePlan session={session} />
       )}
