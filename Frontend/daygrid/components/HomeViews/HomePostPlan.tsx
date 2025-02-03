@@ -182,7 +182,7 @@ export default function HomePostPlan({
         <View style={styles.section}>
           <View style={styles.headerContainer}>
             <Text style={styles.sectionTitle}>
-              {selectedDate === new Date().toLocaleDateString("en-US")
+              {selectedDate == new Date().toLocaleDateString("en-US")
                 ? "Today's Plan"
                 : `${selectedDate} Plan`}
             </Text>
