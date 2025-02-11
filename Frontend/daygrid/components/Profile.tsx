@@ -8,6 +8,7 @@ import {
   TextInput,
   Switch,
   Platform,
+  Modal,
 } from "react-native";
 import { Button } from "react-native-paper";
 import { Session } from "@supabase/supabase-js";
@@ -20,6 +21,13 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 type PlanRouteParams = {
   session: Session;
 };
+
+//Reminder Messages
+const TITLE = "DayGrid";
+const MORNING_SUBTITLE = "Lock in gang!";
+const MORNING_BODY = "Start your day right with a quick planning session!";
+const EVENING_SUBTITLE = "Ready to review your day?";
+const EVENING_BODY = "Let's see how you did.";
 
 export default function Profile() {
   const route = useRoute<RouteProp<{ Plan: PlanRouteParams }, "Plan">>();
@@ -39,122 +47,211 @@ export default function Profile() {
   const [eveningTime, setEveningTime] = useState<Date>(
     new Date(new Date().setHours(21, 0, 0))
   );
+
+  // For handling the inline time picker and save button
   const [showPicker, setShowPicker] = useState(false);
-  const [pickerMode, setPickerMode] = useState("morning");
+  const [pickerMode, setPickerMode] = useState<"morning" | "evening">(
+    "morning"
+  );
+  // Temporary state to store the user's selection until they hit Save
+  const [tempTime, setTempTime] = useState<Date>(new Date());
 
-  useEffect(() => {
-    if (defaultReminders) {
-      scheduleNotification(
-        morningTime,
-        "Good Morning!",
-        "Start your day right!"
-      );
-      scheduleNotification(eveningTime, "Good Evening!", "Time to wind down.");
-    }
-  }, [defaultReminders]);
-
-  async function scheduleNotification(time: Date, title: string, body: string) {
-    await Notifications.scheduleNotificationAsync({
-      content: { title, body },
-      trigger: {
-        date: time,
-        repeats: true,
-      } as unknown as Notifications.NotificationTriggerInput,
-    });
+  // Open the inline time picker and set the temporary value to the current time for the mode
+  function openPicker(mode: "morning" | "evening") {
+    setPickerMode(mode);
+    setTempTime(mode === "morning" ? morningTime : eveningTime);
+    setShowPicker(true);
   }
 
+  // Called when the user changes the time in the picker. We update the temporary state,
+  // but we do not update the final state until the user taps Save.
+  function onPickerChange(event: any, selectedDate?: Date) {
+    if (selectedDate) {
+      setTempTime(selectedDate);
+    }
+  }
+
+  // Save the selected time and update the corresponding reminder
+  function onSaveTime() {
+    if (pickerMode === "morning") {
+      setMorningTime(tempTime);
+    } else {
+      setEveningTime(tempTime);
+    }
+    setShowPicker(false);
+    Alert.alert("Saved", "Your new reminder changes have been saved.");
+  }
+
+  // Toggle functions
   function toggleDefaultReminders(value: boolean) {
+    //way to force teh user to have reminders and warn them if they try to turn them off
+    if (!value && !customReminders) {
+      Alert.alert(
+        "Reminders Recommended",
+        "We recommend keeping your daily reminders on to help you stay accountable."
+      );
+      return; // Prevents turning off the default reminders
+    }
+
     setDefaultReminders(value);
     if (value) {
-      // Turn off custom reminders and hide the time picker.
+      // When default is turned on, disable custom reminders and reset times to default 9 AM / 9 PM
       setCustomReminders(false);
       setShowPicker(false);
 
-      // Create new Date objects for default times.
       const defaultMorning = new Date();
-      defaultMorning.setHours(9, 0, 0, 0); // 9:00 AM
-
+      defaultMorning.setHours(9, 0, 0, 0);
       const defaultEvening = new Date();
-      defaultEvening.setHours(21, 0, 0, 0); // 9:00 PM
-
-      // Update state to reflect default times.
+      defaultEvening.setHours(21, 0, 0, 0);
       setMorningTime(defaultMorning);
       setEveningTime(defaultEvening);
-
-      // Cancel any previously scheduled notifications.
-      Notifications.cancelAllScheduledNotificationsAsync();
-
-      // Schedule notifications with the same messages.
-      scheduleNotification(
-        defaultMorning,
-        "Good Morning!",
-        "Start your day right!"
-      );
-      scheduleNotification(
-        defaultEvening,
-        "Good Evening!",
-        "Time to wind down."
-      );
-    } else {
-      // When turning off default, cancel notifications.
-      Notifications.cancelAllScheduledNotificationsAsync();
     }
+    //to control no reminders use case
+    // else if (!customReminders) {
+    //   setMorningTime(null);
+    //   setEveningTime(null);
+    // }
   }
 
+  //Function for the Custom Reminders Toggle
   function toggleCustomReminders(value: boolean) {
     setCustomReminders(value);
     if (!value) {
       setShowPicker(false);
     }
-
     if (value) {
       setDefaultReminders(false); //turns off default toggle when the user selects custom
     }
+    //to control no reminders use case
+    // else if (!defaultReminders) {
+    //   setMorningTime(null);
+    //   setEveningTime(null);
+    // }
   }
 
-  // Example buttons to open the picker:
-  {
-    customReminders && (
-      <>
-        <Button
-          onPress={() => {
-            setPickerMode("morning");
-            setShowPicker(true);
-          }}
-        >
-          Select Morning Time
-        </Button>
-        <Button
-          onPress={() => {
-            setPickerMode("evening");
-            setShowPicker(true);
-          }}
-        >
-          Select Evening Time
-        </Button>
-      </>
-    );
-  }
-
-  // Render the DateTimePicker only if BOTH customReminders and showPicker are true.
-  {
-    customReminders && showPicker && (
-      <DateTimePicker
-        value={pickerMode === "morning" ? morningTime : eveningTime}
-        mode="time"
-        display={Platform.OS === "ios" ? "spinner" : "default"}
-        onChange={onTimeChange}
-      />
-    );
-  }
-
-  function onTimeChange(event: any, selectedTime?: Date | undefined) {
-    if (selectedTime) {
-      pickerMode === "morning"
-        ? setMorningTime(new Date(selectedTime))
-        : setEveningTime(new Date(selectedTime));
+  // useEffect hook to re-schedule notifications whenever the times or reminder type changes.
+  //also handling iOS permissions for notifications
+  useEffect(() => {
+    async function requestPermissions() {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission required", "Enable notifications in settings.");
+      }
     }
-    setShowPicker(false);
+
+    requestPermissions();
+
+    const subscription = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        console.log("Notification Received", notification);
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: true,
+    }),
+  });
+
+  //Create Notification time
+  function createNotificationTime(time: Date) {
+    const now = new Date(); // Get current time
+    const notificationTime = new Date(time); // Clone the selected time
+
+    // If the selected time is in the past, schedule it for the next day
+    if (notificationTime < now) {
+      notificationTime.setDate(now.getDate() + 1);
+    }
+
+    return notificationTime;
+  }
+
+  // Schedule Notifications for Morning and Evening
+  async function scheduleNotifications() {
+    // Cancel existing notifications before scheduling new ones
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    // Ensure notifications are scheduled only if reminders are enabled
+    if (defaultReminders || customReminders) {
+      const morningNotificationTime = createNotificationTime(morningTime);
+      const eveningNotificationTime = createNotificationTime(eveningTime);
+
+      // Schedule Morning Notification
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: TITLE,
+          subtitle: MORNING_SUBTITLE,
+          body: MORNING_BODY,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour: morningNotificationTime.getHours(),
+          minute: morningNotificationTime.getMinutes(),
+        },
+      });
+
+      // Schedule Evening Notification
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: TITLE,
+          subtitle: EVENING_SUBTITLE,
+          body: EVENING_BODY,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour: eveningNotificationTime.getHours(),
+          minute: eveningNotificationTime.getMinutes(),
+        },
+      });
+
+      console.log(
+        "Notifications scheduled for:",
+        morningNotificationTime,
+        eveningNotificationTime
+      );
+    }
+  }
+
+  // Trigger Notifications When Settings Change
+  useEffect(() => {
+    scheduleNotifications();
+  }, [defaultReminders, customReminders, morningTime, eveningTime]);
+
+  //Reminders Drop down
+  const [showReminders, setShowReminders] = useState(false);
+
+  {
+    /* ------------------------TEST BUTTON FUNCTION BEGIN-----------------------------
+  }
+  async function sendTestNotification() {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Denied", "You must allow notifications.");
+      return;
+    }
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "DayGrid",
+        subtitle: "🔔 Testing Expo Notifications",
+        body: "If you see this, notifications are working!",
+        data: { test: "This is a test notification" },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 2,
+      },
+    });
+    Alert.alert("Success", "Test notification sent!");
+  }
+  {
+    ------------------------TEST BUTTON FUNCTION END----------------------------- */
   }
 
   return (
@@ -178,69 +275,147 @@ export default function Profile() {
         </View>
       </View>
 
-      {/* Current Daily Reminders */}
-      <Text style={styles.header}>Current Daily Reminders</Text>
-      <Text>Morning: {new Date(morningTime).toLocaleTimeString()}</Text>
-      <Text>Evening: {new Date(eveningTime).toLocaleTimeString()}</Text>
+      {/* ------------------------TEST BUTTON BEGIN-----------------------------
+      <Button
+        mode="contained"
+        onPress={sendTestNotification}
+        style={styles.testButton}
+      >
+        Send Test Notification
+      </Button>
+       ------------------------TEST BUTTON END----------------------------- */}
 
-      {/* Default Reminders */}
-      <View style={styles.toggleContainer}>
-        <Text style={styles.header}>Default Daily Reminders</Text>
-        <Switch
-          value={defaultReminders}
-          onValueChange={toggleDefaultReminders}
-          style={styles.switch}
-        />
-      </View>
+      {/* Notification Preferences Dropdown */}
+      <Button
+        mode="contained"
+        onPress={() => setShowReminders(!showReminders)}
+        style={styles.dropdownButton}
+        icon={showReminders ? "chevron-up" : "chevron-down"}
+      >
+        Notification Preferences
+      </Button>
 
-      {/* Custom Notifications */}
-      <View style={styles.toggleContainer}>
-        <Text style={styles.header}>Custom Daily Reminders</Text>
-        <Switch
-          value={customReminders}
-          onValueChange={toggleCustomReminders}
-          style={styles.switch}
-        />
-      </View>
-      <View>
-        {customReminders && (
-          <>
-            <Button
-              onPress={() => {
-                setPickerMode("morning");
-                setShowPicker(true);
-              }}
+      {/* Reminder Settings - Visible Only if showReminders is True */}
+      {showReminders && (
+        <View style={styles.remindersContainer}>
+          {/* Current Daily Reminders */}
+          <Text style={styles.header}>Current Daily Reminders</Text>
+          <Text>
+            Morning:{" "}
+            {defaultReminders || customReminders
+              ? new Date(morningTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "No Reminder Set"}
+          </Text>
+          <Text>
+            Evening:{" "}
+            {defaultReminders || customReminders
+              ? new Date(eveningTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "No Reminder Set"}
+          </Text>
+
+          {/* Toggles */}
+          <View style={styles.togglesWrapper}>
+            <View style={styles.toggleContainer}>
+              <Text style={styles.header}>Default Daily Reminders</Text>
+              <Switch
+                value={defaultReminders}
+                onValueChange={toggleDefaultReminders}
+                style={styles.switch}
+              />
+            </View>
+            <View style={styles.toggleContainer}>
+              <Text style={styles.header}>Custom Daily Reminders</Text>
+              <Switch
+                value={customReminders}
+                onValueChange={toggleCustomReminders}
+                style={styles.switch}
+              />
+            </View>
+          </View>
+
+          {/* Custom Reminder Buttons */}
+          {customReminders && (
+            <>
+              <Button
+                onPress={() => openPicker("morning")}
+                style={styles.reminderButton}
+                labelStyle={styles.reminderButtonLabel}
+              >
+                Set Morning Time
+              </Button>
+              <Button
+                onPress={() => openPicker("evening")}
+                style={styles.reminderButton}
+                labelStyle={styles.reminderButtonLabel}
+              >
+                Set Evening Time
+              </Button>
+            </>
+          )}
+
+          {/* Inline DateTimePicker with Save button */}
+          {customReminders && showPicker && (
+            <Modal
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowPicker(false)}
             >
-              Select Morning Time
-            </Button>
-            <Button
-              onPress={() => {
-                setPickerMode("evening");
-                setShowPicker(true);
-              }}
-            >
-              Select Evening Time
-            </Button>
-          </>
-        )}
-        {showPicker && (
-          <DateTimePicker
-            value={
-              pickerMode === "morning"
-                ? new Date(morningTime)
-                : new Date(eveningTime)
-            }
-            mode="time"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={onTimeChange}
-          />
-        )}
-      </View>
+              <View style={styles.modalContainer}>
+                <View style={styles.pickerContainer}>
+                  <DateTimePicker
+                    value={tempTime}
+                    mode="time"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={onPickerChange}
+                    textColor="black"
+                  />
+
+                  {/* Buttons Row */}
+                  <View style={styles.buttonRow}>
+                    <Button
+                      mode="outlined"
+                      onPress={() => setShowPicker(false)}
+                      style={styles.cancelButton}
+                      labelStyle={styles.cancelButtonLabel}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      mode="contained"
+                      onPress={onSaveTime}
+                      style={styles.saveButton}
+                    >
+                      Save
+                    </Button>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+          )}
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  dropdownButton: {
+    marginVertical: 10,
+    backgroundColor: "#6200ee",
+    borderWidth: 1,
+  },
+  remindersContainer: {
+    marginTop: 10,
+    padding: 20,
+    backgroundColor: "#f1f1f1",
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -252,6 +427,57 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 20,
+    width: "100%",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)", // semi-transparent overlay
+  },
+  pickerContainer: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    // Optionally add shadow/elevation if desired:
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  // New wrapper style to align toggle rows to the left
+  togglesWrapper: {
+    width: "100%",
+    alignItems: "flex-start",
+  },
+  reminderButton: {
+    marginVertical: 10,
+    backgroundColor: "#6200ee",
+  },
+  reminderButtonLabel: {
+    color: "#FFFFFF",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "80%",
+    marginTop: 15,
+  },
+  cancelButton: {
+    flex: 1,
+    marginRight: 10, // Space between buttons
+    marginTop: 10,
+    backgroundColor: "#E0E0E0", // Light gray for cancel button
+  },
+  cancelButtonLabel: {
+    color: "#000000",
+  },
+  saveButton: {
+    flex: 1,
+    marginTop: 10,
+    backgroundColor: "#6200ee",
   },
   switch: {
     // Adjust the translateY value until the toggle aligns with the text
@@ -292,6 +518,8 @@ const styles = StyleSheet.create({
   button: {
     alignSelf: "flex-start", // Align the button to the left
     padding: 0, // Remove extra padding
+    marginVertical: 10,
+    backgroundColor: "#6200ee",
   },
   editButton: {
     alignSelf: "flex-start",
@@ -309,7 +537,13 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start", // Ensures text stays left-aligned
     width: "100%", // Makes sure the label uses full button width
   },
-  header: { fontSize: 18, fontWeight: "bold", marginTop: 20 },
+  header: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 20,
+  },
+  testButton: {
+    marginVertical: 10,
+    backgroundColor: "#6200ee",
+  },
 });
-
-//
