@@ -140,7 +140,9 @@ export default function HomePostPlan({
         newQuadrantArray.push(testQuad[i]);
       }
 
-      setQuadrants(newQuadrantArray);
+      if (quadrants != null && quadrants.length === 0) {
+        setQuadrants(newQuadrantArray);
+      }
     } catch (err) {
       console.error("Error fetching plan data:", err);
       setError("Failed to fetch data. Please try again.");
