@@ -19,12 +19,16 @@ export default function Home() {
   // Correctly type `useRoute` with the `RouteProp` for `Home`
   const { session } = useRoute<RouteProp<HomeRouteParams, "Home">>().params;
 
-  const { plannedDay, setPlannedDay, dayCollectionID, setDayCollectionID } =
-    useAppContext();
+  const {
+    plannedDay,
+    setPlannedDay,
+    dayCollectionID,
+    setDayCollectionID,
+    quadrants,
+    setQuadrants,
+  } = useAppContext();
 
   const [loading, setLoading] = React.useState(true);
-
-  const [quadrants, setQuadrants] = useState(null);
   const [offHandQuadrants, setOffHandQuadrants] = useState(null);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toLocaleDateString("en-US")
@@ -69,7 +73,6 @@ export default function Home() {
       // Cleanup function: runs when the screen loses focus
       return () => {
         console.log("Leaving Home Screen");
-        console.log(offHandQuadrants);
 
         if (offHandQuadrants != null) {
           setQuadrants(offHandQuadrants);
@@ -89,8 +92,6 @@ export default function Home() {
       {plannedDay ? (
         <HomePostPlan
           session={session}
-          quadrants={quadrants}
-          setQuadrants={setQuadrants}
           offHandQuadrants={offHandQuadrants}
           setOffHandQuadrants={setOffHandQuadrants}
           selectedDate={selectedDate}

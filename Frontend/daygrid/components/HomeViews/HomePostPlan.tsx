@@ -29,8 +29,6 @@ interface HomePostPlanProps {
 
 export default function HomePostPlan({
   session,
-  quadrants,
-  setQuadrants,
   offHandQuadrants,
   setOffHandQuadrants,
   selectedDate,
@@ -38,8 +36,14 @@ export default function HomePostPlan({
 }: HomePostPlanProps) {
   const navigation = useNavigation();
 
-  const { plannedDay, setPlannedDay, dayCollectionID, setDayCollectionID } =
-    useAppContext();
+  const {
+    plannedDay,
+    setPlannedDay,
+    dayCollectionID,
+    setDayCollectionID,
+    quadrants,
+    setQuadrants,
+  } = useAppContext();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -140,9 +144,7 @@ export default function HomePostPlan({
         newQuadrantArray.push(testQuad[i]);
       }
 
-      if (quadrants != null && quadrants.length === 0) {
-        setQuadrants(newQuadrantArray);
-      }
+      setQuadrants(newQuadrantArray);
     } catch (err) {
       console.error("Error fetching plan data:", err);
       setError("Failed to fetch data. Please try again.");
@@ -173,6 +175,7 @@ export default function HomePostPlan({
 
   useEffect(() => {
     console.log("Fetching plan data");
+    console.log("CURR QUADRANTS: ", quadrants);
     fetchPlanData();
   }, []);
 
