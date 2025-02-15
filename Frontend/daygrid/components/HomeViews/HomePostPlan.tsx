@@ -156,11 +156,8 @@ export default function HomePostPlan({
 
   const fetchPreviousPlanData = async (selectedDate: string) => {
     if (offHandQuadrants.length === 0) {
-      console.log("setting off hand to ", quadrants);
       setOffHandQuadrants(quadrants);
     }
-
-    console.log("OFF HAND = ", offHandQuadrants);
 
     let newQuadrantArray: Quadrant[] | null = [];
 
@@ -174,8 +171,6 @@ export default function HomePostPlan({
   };
 
   useEffect(() => {
-    console.log("Fetching plan data");
-    console.log("CURR QUADRANTS: ", quadrants);
     fetchPlanData();
   }, []);
 

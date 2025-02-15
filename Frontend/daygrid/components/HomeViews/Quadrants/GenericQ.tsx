@@ -92,6 +92,7 @@ export default function GenericQ({ quadrant, onUpdateTask }: GenericQProps) {
                       >
                         {item.name}
                       </Text>
+                      <Text style={styles.taskItem}>{item.id}</Text>
                     </View>
                   )}
                 />
