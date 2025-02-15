@@ -73,11 +73,7 @@ export default function Home() {
 
       // Cleanup function: runs when the screen loses focus
       return () => {
-        console.log("Leaving Home Screen");
-        console.log("off hand = ", offHandQuadrants);
-
         if (offHandQuadrants.length > 0) {
-          console.log("SETTING QUADRANTS BACK");
           setQuadrants(offHandQuadrants);
           setOffHandQuadrants([]);
           setSelectedDate(new Date().toLocaleDateString("en-US"));
