@@ -82,11 +82,11 @@ export default function Plan() {
         category,
         date: new Date(),
         DayCollection_id: "day-collection-id", // Placeholder, updated on save
-        tasks: [],
+        Task: [],
       };
     }
 
-    updatedQuadrants[planningStep].tasks.push(task);
+    updatedQuadrants[planningStep].Task.push(task);
     setQuadrants(updatedQuadrants);
     setCurrentTask(""); // Clear the input
   };
@@ -134,7 +134,7 @@ export default function Plan() {
 
       // Prepare Tasks with associated Quadrant IDs
       const tasksToInsert = quadrantsData.flatMap((quadrant, index) =>
-        quadrants[index].tasks.map((task: Task) => ({
+        quadrants[index].Task.map((task: Task) => ({
           name: task.name,
           completed: false,
           Quadrant: quadrant.id,

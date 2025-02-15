@@ -19,12 +19,10 @@ import { Calendar } from "react-native-calendars";
 
 interface HomePostPlanProps {
   session: Session;
-  quadrants: Quadrant[] | null;
-  setQuadrants: React.Dispatch<React.SetStateAction<Quadrant[] | null>>;
   offHandQuadrants: Quadrant[] | null;
   setOffHandQuadrants: React.Dispatch<React.SetStateAction<Quadrant[] | null>>;
-  selectedDate: String;
-  setSelectedDate: React.Dispatch<React.SetStateAction<String>>;
+  selectedDate: string;
+  setSelectedDate: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function HomePostPlan({
@@ -144,7 +142,9 @@ export default function HomePostPlan({
         newQuadrantArray.push(testQuad[i]);
       }
 
-      setQuadrants(newQuadrantArray);
+      if (quadrants.length === 0) {
+        setQuadrants(newQuadrantArray);
+      }
     } catch (err) {
       console.error("Error fetching plan data:", err);
       setError("Failed to fetch data. Please try again.");
@@ -158,6 +158,7 @@ export default function HomePostPlan({
 
   const fetchPreviousPlanData = async (selectedDate: string) => {
     if (offHandQuadrants === null) {
+      console.log("setting off hand to ", quadrants);
       setOffHandQuadrants(quadrants);
     }
 
@@ -169,7 +170,6 @@ export default function HomePostPlan({
       .eq("date", selectedDate)
       .eq("DayCollection.user_id", session.user.id);
 
-    console.log("PAST DAY DATA: ", prevQuad);
     setQuadrants(prevQuad);
   };
 

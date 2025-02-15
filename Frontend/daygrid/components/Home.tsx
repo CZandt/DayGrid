@@ -4,7 +4,7 @@ import HomePostPlan from "./HomeViews/HomePostPlan";
 import { View, StyleSheet, Text } from "react-native";
 import { useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
-import { DayCollection } from "../types/types";
+import { DayCollection, Quadrant } from "../types/types";
 import { Session } from "@supabase/supabase-js";
 import { useAppContext } from "../components/ContextProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,7 +29,9 @@ export default function Home() {
   } = useAppContext();
 
   const [loading, setLoading] = React.useState(true);
-  const [offHandQuadrants, setOffHandQuadrants] = useState(null);
+  const [offHandQuadrants, setOffHandQuadrants] = useState<Quadrant[] | null>(
+    null
+  );
   const [selectedDate, setSelectedDate] = useState(
     new Date().toLocaleDateString("en-US")
   );
@@ -73,6 +75,7 @@ export default function Home() {
       // Cleanup function: runs when the screen loses focus
       return () => {
         console.log("Leaving Home Screen");
+        console.log("off hand = ", offHandQuadrants);
 
         if (offHandQuadrants != null) {
           setQuadrants(offHandQuadrants);
