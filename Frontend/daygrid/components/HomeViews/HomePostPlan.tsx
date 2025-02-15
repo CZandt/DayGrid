@@ -19,16 +19,12 @@ import { Calendar } from "react-native-calendars";
 
 interface HomePostPlanProps {
   session: Session;
-  offHandQuadrants: Quadrant[] | null;
-  setOffHandQuadrants: React.Dispatch<React.SetStateAction<Quadrant[] | null>>;
   selectedDate: string;
   setSelectedDate: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function HomePostPlan({
   session,
-  offHandQuadrants,
-  setOffHandQuadrants,
   selectedDate,
   setSelectedDate,
 }: HomePostPlanProps) {
@@ -41,6 +37,8 @@ export default function HomePostPlan({
     setDayCollectionID,
     quadrants,
     setQuadrants,
+    offHandQuadrants,
+    setOffHandQuadrants,
   } = useAppContext();
 
   const [loading, setLoading] = useState(true);
@@ -157,10 +155,12 @@ export default function HomePostPlan({
   };
 
   const fetchPreviousPlanData = async (selectedDate: string) => {
-    if (offHandQuadrants === null) {
+    if (offHandQuadrants.length === 0) {
       console.log("setting off hand to ", quadrants);
       setOffHandQuadrants(quadrants);
     }
+
+    console.log("OFF HAND = ", offHandQuadrants);
 
     let newQuadrantArray: Quadrant[] | null = [];
 

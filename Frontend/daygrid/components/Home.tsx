@@ -26,12 +26,11 @@ export default function Home() {
     setDayCollectionID,
     quadrants,
     setQuadrants,
+    offHandQuadrants,
+    setOffHandQuadrants,
   } = useAppContext();
 
   const [loading, setLoading] = React.useState(true);
-  const [offHandQuadrants, setOffHandQuadrants] = useState<Quadrant[] | null>(
-    null
-  );
   const [selectedDate, setSelectedDate] = useState(
     new Date().toLocaleDateString("en-US")
   );
@@ -77,13 +76,14 @@ export default function Home() {
         console.log("Leaving Home Screen");
         console.log("off hand = ", offHandQuadrants);
 
-        if (offHandQuadrants != null) {
+        if (offHandQuadrants.length > 0) {
+          console.log("SETTING QUADRANTS BACK");
           setQuadrants(offHandQuadrants);
-          setOffHandQuadrants(null);
+          setOffHandQuadrants([]);
           setSelectedDate(new Date().toLocaleDateString("en-US"));
         }
       };
-    }, [plannedDay])
+    }, [plannedDay, offHandQuadrants])
   );
 
   if (loading) {
@@ -95,8 +95,6 @@ export default function Home() {
       {plannedDay ? (
         <HomePostPlan
           session={session}
-          offHandQuadrants={offHandQuadrants}
-          setOffHandQuadrants={setOffHandQuadrants}
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
         />
