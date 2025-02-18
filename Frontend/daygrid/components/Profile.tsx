@@ -1,10 +1,10 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { Button } from "react-native-paper";
 import { Session } from "@supabase/supabase-js";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { useAppContext } from "./ContextProvider";
-
+import { supabase } from "../lib/supabase";
 type PlanRouteParams = {
   session: Session;
 };
@@ -18,19 +18,22 @@ export default function Profile() {
     "en-US"
   );
 
+  // 🔹 Logout function
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      Alert.alert("Logout Error", error.message);
+    } else {
+      Alert.alert("Success", "You have been logged out.");
+      // Navigate back to Auth screen (if you have a navigation setup)
+      // navigation.replace("Auth");  // Uncomment this if using React Navigation
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Profile Section */}
       <View style={styles.profileSection}>
-        {/* Profile Photo Placeholder */}
-        <View style={styles.photoContainer}>
-          {/* <Image
-            style={styles.photo}
-            source={require("./placeholder-profile.png")} // Replace with a default profile image path
-          /> */}
-        </View>
-
-        {/* User Info */}
         <View style={styles.userInfo}>
           <Text style={styles.nameText}>
             {uFirstName} {uLastName}
@@ -49,6 +52,15 @@ export default function Profile() {
       >
         Edit Profile
       </Button>
+
+      {/* 🔹 Logout Button */}
+      <Button
+        mode="contained"
+        style={styles.logoutButton}
+        onPress={handleLogout}
+      >
+        Log Out
+      </Button>
     </View>
   );
 }
@@ -61,29 +73,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
   },
   profileSection: {
-    flexDirection: "row", // Arrange items horizontally
-    alignItems: "center", // Align items vertically in the center
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
-  photoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#d9d9d9",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 20, // Space between the photo and user info
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 40,
-  },
   userInfo: {
-    flex: 1, // Allow the user info to take the remaining space
+    flex: 1,
   },
   nameText: {
-    fontSize: 40,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 4,
@@ -93,11 +91,14 @@ const styles = StyleSheet.create({
     color: "#555",
   },
   editButton: {
-    alignSelf: "flex-start", // Align the button to the left
-    padding: 0, // Remove extra padding
+    alignSelf: "flex-start",
   },
   editButtonLabel: {
     fontSize: 14,
     color: "#6200ee",
+  },
+  logoutButton: {
+    marginTop: 20,
+    backgroundColor: "#D32F2F", // Red color for logout
   },
 });
