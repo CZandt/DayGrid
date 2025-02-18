@@ -1,93 +1,31 @@
 import React, { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
-import { supabase } from "./lib/supabase";
-import { Button, Input } from "@rneui/themed";
+import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+// Import child screens
+import WelcomeScreen from "./components/auth/WelcomeScreen";
+import LoginScreen from "./components/auth/LoginScreen";
+import SignupScreen from "./components/auth/SignupScreen";
+import ResetPasswordScreen from "./components/auth/ResetPasswordScreen";
+import ProfileSetupScreen from "./components/auth/ProfileSetupScreen";
 
 export default function Auth() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function signInWithEmail() {
-    setLoading(true);
-    console.log("LOADING");
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-    console.log("LOADED");
-    if (error) Alert.alert(error.message);
-    setLoading(false);
-  }
-
-  async function signUpWithEmail() {
-    setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    });
-
-    if (error) Alert.alert(error.message);
-    if (!session)
-      Alert.alert("Please check your inbox for email verification!");
-    setLoading(false);
-  }
+  const [screen, setScreen] = useState("welcome"); // Tracks which screen to show
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input
-          label="Email"
-          leftIcon={{ type: "font-awesome", name: "envelope" }}
-          onChangeText={(text) => setEmail(text)}
-          value={email}
-          placeholder="email@address.com"
-          autoCapitalize={"none"}
-        />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Input
-          label="Password"
-          leftIcon={{ type: "font-awesome", name: "lock" }}
-          onChangeText={(text) => setPassword(text)}
-          value={password}
-          secureTextEntry={true}
-          placeholder="Password"
-          autoCapitalize={"none"}
-        />
-      </View>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Button
-          title="Sign in"
-          disabled={loading}
-          onPress={() => signInWithEmail()}
-        />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Button
-          title="Sign up"
-          disabled={loading}
-          onPress={() => signUpWithEmail()}
-        />
-      </View>
-    </View>
+    <SafeAreaView style={styles.container}>
+      {screen === "welcome" && <WelcomeScreen onNavigate={setScreen} />}
+      {screen === "login" && <LoginScreen onNavigate={setScreen} />}
+      {screen === "signup" && <SignupScreen onNavigate={setScreen} />}
+      {screen === "resetPassword" && <ResetPasswordScreen onNavigate={setScreen} />}
+      {screen === "profileSetup" && <ProfileSetupScreen onNavigate={setScreen} />}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 40,
-    padding: 12,
-  },
-  verticallySpaced: {
-    paddingTop: 4,
-    paddingBottom: 4,
-    alignSelf: "stretch",
-  },
-  mt20: {
-    marginTop: 20,
+    flex: 1,
+    backgroundColor: "#373F51", // Dark background for the entire screen
   },
 });

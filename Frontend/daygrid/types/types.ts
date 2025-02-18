@@ -1,3 +1,21 @@
+import { StackNavigationProp } from "@react-navigation/stack";
+
+export type AuthStackParamList = {
+  Welcome: undefined;
+  Login: undefined;
+  Signup: undefined;
+  ResetPassword: undefined;
+  ProfileSetup: undefined;
+};
+
+export type AuthScreenNavigationProp<T extends keyof AuthStackParamList> = StackNavigationProp<AuthStackParamList, T>;
+export type AppStackParamList = {
+  Home: undefined;
+  Plan: undefined;  // ✅ Ensure Plan is included
+  Dashboard: undefined;
+  Settings: undefined;
+};
+
 export interface DayCollectionBASE {
   id: string;
   created_at: Date;

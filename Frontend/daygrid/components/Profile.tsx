@@ -10,6 +10,7 @@ import {
   Platform,
   Modal,
 } from "react-native";
+
 import { Button } from "react-native-paper";
 import { Session } from "@supabase/supabase-js";
 import { useRoute, RouteProp } from "@react-navigation/native";
@@ -18,6 +19,9 @@ import * as Notifications from "expo-notifications";
 import { useState, useEffect } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
+import { supabase } from "../lib/supabase";
+
+        
 type PlanRouteParams = {
   session: Session;
 };
@@ -37,7 +41,6 @@ export default function Profile() {
   const formattedDate = new Date(session.user.created_at).toLocaleDateString(
     "en-US"
   );
-
   //for the default and custom reminders
   const [defaultReminders, setDefaultReminders] = useState(true);
   const [customReminders, setCustomReminders] = useState(false);
@@ -253,6 +256,17 @@ export default function Profile() {
   {
     ------------------------TEST BUTTON FUNCTION END----------------------------- */
   }
+  // 🔹 Logout function
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      Alert.alert("Logout Error", error.message);
+    } else {
+      Alert.alert("Success", "You have been logged out.");
+      // Navigate back to Auth screen (if you have a navigation setup)
+      // navigation.replace("Auth");  // Uncomment this if using React Navigation
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -294,7 +308,6 @@ export default function Profile() {
       >
         Notification Preferences
       </Button>
-
       {/* Reminder Settings - Visible Only if showReminders is True */}
       {showReminders && (
         <View style={styles.remindersContainer}>
@@ -484,29 +497,15 @@ const styles = StyleSheet.create({
     transform: [{ translateY: 12 }],
   },
   profileSection: {
-    flexDirection: "row", // Arrange items horizontally
-    alignItems: "center", // Align items vertically in the center
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
-  photoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#d9d9d9",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 20, // Space between the photo and user info
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 40,
-  },
   userInfo: {
-    flex: 1, // Allow the user info to take the remaining space
+    flex: 1,
   },
   nameText: {
-    fontSize: 40,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 4,
@@ -529,7 +528,6 @@ const styles = StyleSheet.create({
   buttonLabel: {
     fontSize: 14,
     color: "#6200ee",
-  },
   editButtonLabel: {
     fontSize: 14,
     color: "#6200ee",
@@ -545,5 +543,9 @@ const styles = StyleSheet.create({
   testButton: {
     marginVertical: 10,
     backgroundColor: "#6200ee",
+  },
+  logoutButton: {
+    marginTop: 20,
+    backgroundColor: "#D32F2F", // Red color for logout
   },
 });
