@@ -21,7 +21,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { supabase } from "../lib/supabase";
 
-        
 type PlanRouteParams = {
   session: Session;
 };
@@ -93,7 +92,6 @@ export default function Profile() {
         "Reminders Recommended",
         "We recommend keeping your daily reminders on to help you stay accountable."
       );
-      return; // Prevents turning off the default reminders
     }
 
     setDefaultReminders(value);
@@ -528,6 +526,7 @@ const styles = StyleSheet.create({
   buttonLabel: {
     fontSize: 14,
     color: "#6200ee",
+  },
   editButtonLabel: {
     fontSize: 14,
     color: "#6200ee",
