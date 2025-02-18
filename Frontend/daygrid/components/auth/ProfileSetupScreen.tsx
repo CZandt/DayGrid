@@ -29,7 +29,7 @@ export default function ProfileSetupScreen({ onNavigate }: { onNavigate: (screen
     if (updateError) alert(updateError.message);
     else {
       alert("Profile setup complete!");
-      onNavigate("home"); // ✅ Send user to main app (Toolbar)
+      onNavigate("home"); // Send user to main app (Toolbar)
     }
     setLoading(false);
   }

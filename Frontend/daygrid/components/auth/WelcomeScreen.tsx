@@ -1,25 +1,82 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WelcomeScreen({ onNavigate }: { onNavigate: (screen: string) => void }) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to DayGrid</Text>
-      <TouchableOpacity style={styles.button} onPress={() => onNavigate("login")}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.buttonOutline} onPress={() => onNavigate("signup")}>
-        <Text style={styles.buttonOutlineText}>Sign Up</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
+      <StatusBar barStyle="light-content" />
+      <View style={styles.container}>
+        <Image 
+          source={require("../../assets/DayGrid_new_logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.title}>Welcome to DayGrid</Text>
+        
+        {/* Login Button */}
+        <TouchableOpacity style={styles.loginButton} onPress={() => onNavigate("login")}>
+          <Text style={styles.loginButtonText}>Login</Text>
+        </TouchableOpacity>
+        
+        {/* Sign Up Button */}
+        <TouchableOpacity style={styles.signupButton} onPress={() => onNavigate("signup")}>
+          <Text style={styles.signupButtonText}>Sign Up</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-  button: { backgroundColor: "#6200EE", padding: 12, borderRadius: 8, marginTop: 10 },
-  buttonText: { color: "white", fontSize: 16 },
-  buttonOutline: { borderWidth: 1, borderColor: "#6200EE", padding: 12, borderRadius: 8, marginTop: 10 },
-  buttonOutlineText: { color: "#6200EE", fontSize: 16 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#373F51",
+  },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
+  },
+  title: {
+    fontFamily: "ProximaNova-Bold",
+    fontSize: 24,
+    color: "#FFFFFF",
+    marginBottom: 20,
+  },
+  loginButton: {
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  loginButtonText: {
+    fontFamily: "ProximaNova-Bold",
+    fontSize: 16,
+    color: "#9CA3AF", // White text for the Login button
+  },
+  signupButton: {
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  signupButtonText: {
+    fontFamily: "ProximaNova-Bold",
+    fontSize: 16,
+    color: "#FFFFFF",
+  },
 });
