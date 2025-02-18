@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
+import { Quadrant } from "../types/types";
 
 interface AppContextProps {
   plannedDay: boolean;
@@ -18,6 +19,12 @@ interface AppContextProps {
 
   uLastName: string;
   setULastName: React.Dispatch<React.SetStateAction<string>>;
+
+  quadrants: Quadrant[];
+  setQuadrants: React.Dispatch<React.SetStateAction<Quadrant[]>>;
+
+  offHandQuadrants: Quadrant[];
+  setOffHandQuadrants: React.Dispatch<React.SetStateAction<Quadrant[]>>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -34,6 +41,10 @@ export const ContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [uFirstName, setUFirstName] = useState("");
   const [uLastName, setULastName] = useState("");
 
+  const [quadrants, setQuadrants] = useState<Quadrant[]>([]);
+
+  const [offHandQuadrants, setOffHandQuadrants] = useState<Quadrant[]>([]);
+
   return (
     <AppContext.Provider
       value={{
@@ -49,6 +60,10 @@ export const ContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setUFirstName,
         setULastName,
         uLastName,
+        quadrants,
+        setQuadrants,
+        offHandQuadrants,
+        setOffHandQuadrants,
       }}
     >
       {children}
