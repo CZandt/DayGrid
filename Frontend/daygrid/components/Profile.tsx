@@ -92,6 +92,7 @@ export default function Profile() {
         "Reminders Recommended",
         "We recommend keeping your daily reminders on to help you stay accountable."
       );
+      return;
     }
 
     setDefaultReminders(value);
