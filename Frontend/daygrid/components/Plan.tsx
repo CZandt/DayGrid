@@ -23,12 +23,12 @@ type PlanRouteParams = {
 
 export default function Plan() {
   const [planningStep, setPlanningStep] = React.useState(0);
-  const [quadrants, setQuadrants] = React.useState<Quadrant[]>([]);
   const [currentTask, setCurrentTask] = React.useState("");
   const [completed, setCompleted] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false); // Add state for submission
 
-  const { plannedDay, setPlannedDay } = useAppContext();
+  const { plannedDay, setPlannedDay, quadrants, setQuadrants } =
+    useAppContext();
   const navigation = useNavigation();
 
   const route = useRoute<RouteProp<{ Plan: PlanRouteParams }, "Plan">>();
@@ -82,11 +82,11 @@ export default function Plan() {
         category,
         date: new Date(),
         DayCollection_id: "day-collection-id", // Placeholder, updated on save
-        tasks: [],
+        Task: [],
       };
     }
 
-    updatedQuadrants[planningStep].tasks.push(task);
+    updatedQuadrants[planningStep].Task.push(task);
     setQuadrants(updatedQuadrants);
     setCurrentTask(""); // Clear the input
   };
@@ -134,7 +134,7 @@ export default function Plan() {
 
       // Prepare Tasks with associated Quadrant IDs
       const tasksToInsert = quadrantsData.flatMap((quadrant, index) =>
-        quadrants[index].tasks.map((task: Task) => ({
+        quadrants[index].Task.map((task: Task) => ({
           name: task.name,
           completed: false,
           Quadrant: quadrant.id,
@@ -179,11 +179,12 @@ export default function Plan() {
   };
 
   const currentTasks =
-    quadrants[planningStep]?.tasks.map((task: Task) => task.name) || [];
+    quadrants[planningStep]?.Task.map((task: Task) => task.name) || [];
 
   useFocusEffect(
     React.useCallback(() => {
       console.log("ENTERED PLANNING");
+
       return () => {
         setIsSubmitted(false);
         console.log("Leaving Plan Screen");
