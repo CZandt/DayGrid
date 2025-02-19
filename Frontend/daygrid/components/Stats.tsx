@@ -28,6 +28,7 @@ const StatsPage = () => {
 
 
   const isFocused = useIsFocused();
+  const [aiInsights, setAiInsights] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +36,8 @@ const StatsPage = () => {
       await fetchLine();        // Fetch task data for the chart
       await fetchContribution();
       await fetchProgress();
+      const tasksDetails = await fetchPlanTasksDetails();
+      await fetchAIInsights(tasksDetails);
     };
   
     fetchData();  // Fetch the data once when the component mounts
@@ -262,6 +265,79 @@ const StatsPage = () => {
 
     setRefreshing(false);
   };
+
+  const fetchPlanTasksDetails = async (): Promise<string> => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+      .from("Task")
+      .select("name, completed, Quadrant")
+      .gte("created_at", today.toISOString());
+
+    if (error) {
+      console.error("Error fetching plan tasks details:", error);
+      return "No planning tasks details available.";
+    }
+
+    const groupedTasks: { [key: string]: { name: string; completed: boolean }[] } = {};
+    data.forEach((task: any) => {
+      const category = task.Quadrant || "Other";
+      if (!groupedTasks[category]) {
+        groupedTasks[category] = [];
+      }
+      groupedTasks[category].push({ name: task.name, completed: task.completed });
+    });
+
+    let tasksDetails = "";
+    for (const category in groupedTasks) {
+      tasksDetails += `\nCategory: ${category}\n`;
+      groupedTasks[category].forEach((task) => {
+        tasksDetails += `- ${task.name} (Status: ${task.completed ? "COMPLETED" : "NOT COMPLETED"})\n`;
+      });
+    }
+    return tasksDetails;
+  };
+
+  const fetchAIInsights = async (tasksDetails: string) => {
+    const prompt = `
+Analyze the following user productivity data and provide personalized insights:
+
+Task Details:
+${tasksDetails}
+
+Instructions:
+1. For every task marked as COMPLETED, commend its accomplishment.
+2. For every task marked as NOT COMPLETED, offer specific, actionable advice to complete it.
+3. Keep your response concise, motivational, and under 150 words.
+4. Use a friendly tone with occasional uplifting emojis.
+
+Please provide your response based on the data above.
+    `;
+
+    try {
+      const response = await fetch("http://10.37.19.33:3000/api/insights", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        throw new Error(
+          `HTTP Error: ${response.status} - ${errorResponse.error?.message || "Unknown error"}`
+        );
+      }
+
+      const data = await response.json();
+      setAiInsights(data.insights);
+    } catch (error) {
+      console.error("Error fetching AI insights:", error);
+      setAiInsights("⚠️ Could not retrieve AI insights at this time. Please try again later.");
+    }
+  };
   
   // Only render the LineChart when chartData is available
   if (!chartData || !chartData.labels || chartData.labels.length === 0) {
@@ -400,13 +476,10 @@ const StatsPage = () => {
         ))}
       </View>
 
-
       <View style={styles.aiBox}>
         <Text style={styles.aiTitle}>AI Insights</Text>
-        <Text style={styles.aiText}>You plan more on Mondays, try balancing your focus across all quadrants this week!</Text>
+        <Text style={styles.aiText}>{aiInsights || "Loading insights..."}</Text>
       </View>
-
-
 
     </ScrollView>
   );
