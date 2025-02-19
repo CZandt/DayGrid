@@ -285,6 +285,13 @@ export default function Profile() {
           >
             Edit Profile
           </Button>
+          <Button
+            style={styles.logoutButton}
+            labelStyle={styles.reminderButtonLabel}
+            onPress={() => handleLogout()}
+          >
+            Logout
+          </Button>
         </View>
       </View>
 
